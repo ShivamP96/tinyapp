@@ -10,7 +10,13 @@ const urlDatabase = {
 };
 
 function generateRandomString() {
-  
+  let result = "";
+  const alphaNumeric = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const charLen = alphaNumeric.length;
+  for(let i = 0; i < 6; i++) {
+    result += alphaNumeric.charAt(Math.floor(Math.random() * charLen))
+  }
+  return result;
 }
 
 const bodyParser = require("body-parser");
