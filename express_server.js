@@ -31,9 +31,9 @@ app.post("/urls", (request, response) => {
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
-  console.log(request.params.shortURL)
-  console.log(urlDatabase)
-  delete urlDatabase.params.shortURL;
+  // console.log(request.params.shortURL)
+  // console.log(urlDatabase)
+  delete urlDatabase[request.params.shortURL];
   response.redirect(`/urls`)
 })
 
