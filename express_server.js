@@ -23,15 +23,17 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.post("/urls", (request, response) => {
+  let randomString = generateRandomString();
+  console.log(randomString);
+  urlDatabase[randomString] = request.body.longURL;
   console.log(request.body);
-  response.send("Ok");
+  response.redirect(`/urls/${randomString}`);
+  
 });
 
 app.get("/", (request, response) => {
   response.send("Hello!");
 });
-
-
 
 app.get("/urls.json", (request, response) => {
   response.json(urlDatabase)
@@ -53,6 +55,15 @@ app.get("/urls/new", (request, response) => {
 app.get("/urls/:shortURL", (request, response) => {
   let templateVars = { shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL]};
   response.render('urls_show', templateVars)
+})
+
+app.get("/u/:shortURL", (request, response) => {
+  if(urlDatabase[request.params.shortURL]) {
+    response.redirect(urlDatabase[request.params.shortURL])
+  } else {
+    response.send(404);
+  }
+  //response.redirect(longURL);
 })
 
 app.listen(PORT, () => {
