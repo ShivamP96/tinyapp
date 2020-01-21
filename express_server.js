@@ -24,3 +24,8 @@ app.get("/urls.json", (request, response) => {
 app.get("/hello", (request, response) => {
   response.send("<html><body>Hello<b>World</b></body></html>\n");
 })
+
+app.get("/urls", (request, response) => {
+  let templateVars = { urls: urlDatabase };
+  response.render("urls_index", templateVars);
+})
