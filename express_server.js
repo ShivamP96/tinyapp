@@ -30,9 +30,10 @@ app.post("/urls", (request, response) => {
   response.redirect(`/urls/${randomString}`);
 });
 
-app.post("urls/:shortURL/delete", (request, response) => {
-  console.log(request.body.shortURL)
-  delete urlDatabase.shortURL;
+app.post("/urls/:shortURL/delete", (request, response) => {
+  console.log(request.params.shortURL)
+  console.log(urlDatabase)
+  delete urlDatabase.params.shortURL;
   response.redirect(`/urls`)
 })
 
