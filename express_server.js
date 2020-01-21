@@ -24,9 +24,9 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.post("/urls", (request, response) => {
   let randomString = generateRandomString();
-  console.log(randomString);
+  //console.log(randomString);
   urlDatabase[randomString] = request.body.longURL;
-  console.log(request.body);
+  //console.log(request.body);
   response.redirect(`/urls/${randomString}`);
 });
 
@@ -36,6 +36,12 @@ app.post("/urls/:shortURL/delete", (request, response) => {
   delete urlDatabase[request.params.shortURL];
   response.redirect(`/urls`)
 })
+app.post("/urls/:shortURL", (request, response) => {
+  console.log(request.body)
+  urlDatabase[request.params.shortURL] = request.body.longURL;
+  response.redirect(`/urls`)
+})
+
 
 app.get("/", (request, response) => {
   response.send("Hello!");
