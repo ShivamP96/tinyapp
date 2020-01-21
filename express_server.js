@@ -28,8 +28,13 @@ app.post("/urls", (request, response) => {
   urlDatabase[randomString] = request.body.longURL;
   console.log(request.body);
   response.redirect(`/urls/${randomString}`);
-  
 });
+
+app.post("urls/:shortURL/delete", (request, response) => {
+  console.log(request.body.shortURL)
+  delete urlDatabase.shortURL;
+  response.redirect(`/urls`)
+})
 
 app.get("/", (request, response) => {
   response.send("Hello!");
