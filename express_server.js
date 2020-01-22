@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
+let cookieParser = require('cookie-parser');
+app.use(cookieParser());
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({extended: true}));
 app.set('view engine', 'ejs');
 
 const urlDatabase = {
@@ -19,8 +23,7 @@ function generateRandomString() {
   return result;
 }
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+
 
 app.post("/urls", (request, response) => {
   let randomString = generateRandomString();
@@ -37,11 +40,21 @@ app.post("/urls/:shortURL/delete", (request, response) => {
   response.redirect(`/urls`)
 })
 app.post("/urls/:shortURL", (request, response) => {
-  console.log(request.body)
+  console.log(request.body);
   urlDatabase[request.params.shortURL] = request.body.longURL;
-  response.redirect(`/urls`)
+  response.redirect(`/urls`);
 })
 
+app.post("/login", (request, response) => {
+  response.cookie('username', request.body.username)
+  response.redirect(`/urls`);
+})
+
+app.post("/logout", (request, response) => {
+  response.clearCookie('username');
+  response.redirect('/urls')
+
+})
 
 app.get("/", (request, response) => {
   response.send("Hello!");
@@ -56,18 +69,22 @@ app.get("/hello", (request, response) => {
 })
 
 app.get("/urls", (request, response) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = {username: request.cookies["username"], urls: urlDatabase };
   response.render("urls_index", templateVars);
 })
 
 app.get("/urls/new", (request, response) => {
-  response.render("urls_new");
+  let templateVars = {
+    username: request.cookies["username"]}
+  response.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (request, response) => {
-  let templateVars = { shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL]};
+  let templateVars = { username: request.cookies["username"], shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL]};
   response.render('urls_show', templateVars)
 })
+
+
 
 app.get("/u/:shortURL", (request, response) => {
   if(urlDatabase[request.params.shortURL]) {
