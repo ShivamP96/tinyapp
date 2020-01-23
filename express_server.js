@@ -98,6 +98,21 @@ app.post("/register", (request, response) => {
   }
 });
 
+app.post("/newLogin", (request, response) => {
+console.log(request.body)
+  let user =  emailExistance(request.body.email, users)
+  
+
+  if (user === false) {
+    response.status(403).send("Email Cannot be found")
+  } else if (request.body.password !== user.password) {
+    response.status(403).send("Passwords don't match")
+  } else {
+    response.cookie("user_id", user.id);
+    response.redirect(`/urls`);
+  }
+})
+
 app.get("/", (request, response) => {
   response.send("Hello!");
 });
@@ -111,11 +126,15 @@ app.get("/hello", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
- // console.log(request.cookies.user_id)
-  //console.log(users)
   let templateVars = { user: users[request.cookies.user_id], urls: urlDatabase };
   response.render("urls_index", templateVars);
 });
+
+app.get("/newLogin", (request, response) => {
+    console.log("accessing newLogin page")
+    let templateVars = { user: users[request.cookies.user_id], urls: urlDatabase };
+    response.render("urls_login", templateVars)
+})
 
 app.get("/urls/new", (request, response) => {
   let templateVars = {
