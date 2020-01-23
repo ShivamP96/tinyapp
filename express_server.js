@@ -72,12 +72,19 @@ app.post("/urls", (request, response) => {
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
-  delete urlDatabase[request.params.shortURL];
+  if(request.cookies.user_id === urlDatabase[request.params.shortURL].userID){
+    delete urlDatabase[request.params.shortURL];
   response.redirect(`/urls`);
+  } else {
+    response.status(403).send("no")
+  }
+  
 });
 app.post("/urls/:shortURL", (request, response) => {
-  urlDatabase[request.params.shortURL] = request.body.longURL;
+  if(request.cookies.user_id === urlDatabase[request.params.shortURL].userID) {
+     urlDatabase[request.params.shortURL] = request.body.longURL;
   response.redirect(`/urls`);
+  }
 });
 
 app.post("/login", (request, response) => {
