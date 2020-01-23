@@ -9,8 +9,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" }
 };
 
 const users = {
@@ -52,20 +52,21 @@ function emailExistance(email, users) {
 app.post("/urls", (request, response) => {
   
   let randomString = generateRandomString();
-  //console.log(randomString);
-  urlDatabase[randomString] = request.body.longURL;
-  //console.log(request.body);
+  // urlDatabase[randomString].longURL = request.body.longURL;
+  // urlDatabase[randomString] = request.cookies.user_id;
+  urlDatabase[randomString] = {"longURL": request.body.longURL, "userID": request.cookies.user_id}
+  console.log(urlDatabase);
   response.redirect(`/urls/${randomString}`);
 });
 
+
+
+
 app.post("/urls/:shortURL/delete", (request, response) => {
-  // console.log(request.params.shortURL)
-  // console.log(urlDatabase)
   delete urlDatabase[request.params.shortURL];
   response.redirect(`/urls`);
 });
 app.post("/urls/:shortURL", (request, response) => {
-  //console.log(request.body);
   urlDatabase[request.params.shortURL] = request.body.longURL;
   response.redirect(`/urls`);
 });
@@ -101,8 +102,6 @@ app.post("/register", (request, response) => {
 app.post("/newLogin", (request, response) => {
 console.log(request.body)
   let user =  emailExistance(request.body.email, users)
-  
-
   if (user === false) {
     response.status(403).send("Email Cannot be found")
   } else if (request.body.password !== user.password) {
@@ -126,7 +125,6 @@ app.get("/hello", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  // does cookie exist with a value, that means someones logged in, then redirect
   let templateVars = { user: users[request.cookies.user_id], urls: urlDatabase };
   response.render("urls_index", templateVars);
 });
