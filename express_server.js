@@ -1,12 +1,17 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const bcrypt = require('bcrypt');
+const password = "purple-monkey-dinosaur";
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 let cookieParser = require("cookie-parser");
 app.use(cookieParser());
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
+
+
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: 'aaa' },
@@ -17,17 +22,17 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: bcrypt.hashSync("purple-monkey-dinosaur",10)
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: bcrypt.hashSync("dishwasher-funk",10)
   },
   aaa: {
     id: "aaa",
     email: "a@a",
-    password: "a"
+    password: bcrypt.hashSync("a",10)
   }
 };
 
@@ -108,7 +113,7 @@ app.post("/register", (request, response) => {
     console.log(emailExistance(email, users));
     response.status(400).send("email already exists");
   } else {
-    users[randomID] = { id: randomID, email: email, password: password };
+    users[randomID] = { id: randomID, email: email, password: bcrypt.hashSync(password, 10)};
     response.cookie("user_id", randomID);
     response.redirect("/urls");
   }
@@ -116,9 +121,12 @@ app.post("/register", (request, response) => {
 
 app.post("/newLogin", (request, response) => {
   let user =  emailExistance(request.body.email, users)
+  console.log(user)
   if (user === false) {
     response.status(403).send("Email Cannot be found")
-  } else if (request.body.password !== user.password) {
+
+  } else if (!(bcrypt.compareSync(request.body.password,user.password))) { //request.body.password !== user.password)
+
     response.status(403).send("Passwords don't match")
   } else {
     response.cookie("user_id", user.id);
