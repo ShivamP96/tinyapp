@@ -9,8 +9,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "userRandomID" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "user2RandomID" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: 'aaa' },
+  i3BoGr: { longURL: "https://www.google.ca", userID: 'user2RandomID' }
 };
 
 const users = {
@@ -23,6 +23,11 @@ const users = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
+  },
+  aaa: {
+    id: "aaa",
+    email: "a@a",
+    password: "a"
   }
 };
 
@@ -41,7 +46,6 @@ function emailExistance(email, users) {
   let keys = Object.keys(users);
 
   for (const element of keys) {
-    console.log(users[element].email);
     if (users[element].email === email) {
       return users[element];
     }
@@ -49,18 +53,23 @@ function emailExistance(email, users) {
   return false;
 }
 
+// Returns the URLs where the userID is equal to the id of the currently logged in user
+function urlsForUser(id) {
+  let newDatabase = {}
+  for (const item in urlDatabase) {
+    if(urlDatabase[item].userID === id) {
+      console.log(urlDatabase[item])
+       newDatabase[item] = urlDatabase[item];
+    }
+  }
+  return newDatabase;
+}
+
 app.post("/urls", (request, response) => {
-  
-  let randomString = generateRandomString();
-  // urlDatabase[randomString].longURL = request.body.longURL;
-  // urlDatabase[randomString] = request.cookies.user_id;
-  urlDatabase[randomString] = {"longURL": request.body.longURL, "userID": request.cookies.user_id}
-  console.log(urlDatabase);
-  response.redirect(`/urls/${randomString}`);
+      let randomString = generateRandomString();
+      urlDatabase[randomString] = {"longURL": request.body.longURL, "userID": request.cookies.user_id}
+      response.redirect('/urls')
 });
-
-
-
 
 app.post("/urls/:shortURL/delete", (request, response) => {
   delete urlDatabase[request.params.shortURL];
@@ -72,7 +81,6 @@ app.post("/urls/:shortURL", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-
  let id =  emailExistance(request.body.user_id, users).id
   response.cookie("user_id", id);
   response.redirect(`/urls`);
@@ -100,7 +108,6 @@ app.post("/register", (request, response) => {
 });
 
 app.post("/newLogin", (request, response) => {
-console.log(request.body)
   let user =  emailExistance(request.body.email, users)
   if (user === false) {
     response.status(403).send("Email Cannot be found")
@@ -125,8 +132,15 @@ app.get("/hello", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  let templateVars = { user: users[request.cookies.user_id], urls: urlDatabase };
-  response.render("urls_index", templateVars);
+  
+  if (request.cookies.user_id) { // if user exists
+    let databaseForUser = urlsForUser(request.cookies.user_id);
+    let templateVars = { user: users[request.cookies.user_id], urls: databaseForUser };
+    response.render("urls_index", templateVars);
+  } else {
+    console.log("redirect to login cause u ain't logged in")
+    response.redirect("/newLogin"); 
+  }
 });
 
 app.get("/newLogin", (request, response) => {
@@ -137,10 +151,9 @@ app.get("/newLogin", (request, response) => {
 
 app.get("/urls/new", (request, response) => {
   if(request.cookies.user_id) {
-    let templateVars = {
-      user: users[request.cookies.user_id]
-    };
+    let templateVars = {user: users[request.cookies.user_id]};
     response.render("urls_new", templateVars);
+
   } else {
     response.redirect("/newLogin");
   }
@@ -148,12 +161,19 @@ app.get("/urls/new", (request, response) => {
 });
 
 app.get("/urls/:shortURL", (request, response) => {
-  let templateVars = {
+  if (request.cookies.user_id && urlDatabase[request.params.shortURL].userID === request.cookies.user_id) {
+    let templateVars = {
     user: users[request.cookies.user_id],
     shortURL: request.params.shortURL,
-    longURL: urlDatabase[request.params.shortURL]
+    longURL: urlDatabase[request.params.shortURL].longURL
   };
   response.render("urls_show", templateVars);
+
+  } else {
+    response.redirect('/newLogin')
+
+  }
+  
 });
 
 app.get("/register", (request, response) => {
@@ -165,7 +185,7 @@ app.get("/register", (request, response) => {
 
 app.get("/u/:shortURL", (request, response) => {
   if (urlDatabase[request.params.shortURL]) {
-    response.redirect(urlDatabase[request.params.shortURL]);
+    response.redirect(urlDatabase[request.params.shortURL].longURL);
   } else {
     response.send(404);
   }
