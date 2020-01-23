@@ -126,6 +126,7 @@ app.get("/hello", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
+  // does cookie exist with a value, that means someones logged in, then redirect
   let templateVars = { user: users[request.cookies.user_id], urls: urlDatabase };
   response.render("urls_index", templateVars);
 });
