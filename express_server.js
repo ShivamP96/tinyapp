@@ -138,10 +138,15 @@ app.get("/newLogin", (request, response) => {
 })
 
 app.get("/urls/new", (request, response) => {
-  let templateVars = {
-    user: users[request.cookies.user_id]
-  };
-  response.render("urls_new", templateVars);
+  if(request.cookies.user_id) {
+    let templateVars = {
+      user: users[request.cookies.user_id]
+    };
+    response.render("urls_new", templateVars);
+  } else {
+    response.redirect("/newLogin");
+  }
+ 
 });
 
 app.get("/urls/:shortURL", (request, response) => {
