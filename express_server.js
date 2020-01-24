@@ -162,6 +162,11 @@ app.get("/u/:shortURL", (request, response) => {
   }
 });
 
+app.get("*", (request, response) => {
+  response.send("cannot access page, it doesn't exist");
+  console.log(request.params)
+})
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port: ${PORT}!`);
 });
