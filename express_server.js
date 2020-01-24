@@ -97,7 +97,7 @@ app.post("/urls/:shortURL/delete", (request, response) => {
 });
 app.post("/urls/:shortURL", (request, response) => {
   if(request.session.user_id === urlDatabase[request.params.shortURL].userID) {
-     urlDatabase[request.params.shortURL] = request.body.longURL;
+     urlDatabase[request.params.shortURL].longURL = request.body.longURL;
   response.redirect(`/urls`);
   }
 });
