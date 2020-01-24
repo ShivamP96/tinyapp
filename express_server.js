@@ -2,26 +2,18 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 const bcrypt = require('bcrypt');
-const password = "purple-monkey-dinosaur";
-const hashedPassword = bcrypt.hashSync(password, 10);
-
-//let cookieParser = require("cookie-parser");
-//app.use(cookieParser());
-
-let cookieSession = require('cookie-session');
-app.use(cookieSession({
-  name: 'session',
-  keys: ['asdf'],
-
-  // Cookie Options
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
-}));
-
 const bodyParser = require("body-parser");
+const { emailExistance, generateRandomString, urlsForUser  } = require("./helpers.js")
+let cookieSession = require('cookie-session');
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
-
+app.use(cookieSession({ 
+  name: 'session',
+  keys: ['asdf'],
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: 'aaa' },
@@ -46,40 +38,6 @@ const users = {
   }
 };
 
-function generateRandomString() {
-  let result = "";
-  const alphaNumeric =
-    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const charLen = alphaNumeric.length;
-  for (let i = 0; i < 6; i++) {
-    result += alphaNumeric.charAt(Math.floor(Math.random() * charLen));
-  }
-  return result;
-}
-
-function emailExistance(email, users) {
-  let keys = Object.keys(users);
-
-  for (const element of keys) {
-    if (users[element].email === email) {
-      return users[element];
-    }
-  }
-  return false;
-}
-
-// Returns the URLs where the userID is equal to the id of the currently logged in user
-function urlsForUser(id) {
-  let newDatabase = {}
-  for (const item in urlDatabase) {
-    if(urlDatabase[item].userID === id) {
-      //console.log(urlDatabase[item])
-       newDatabase[item] = urlDatabase[item];
-    }
-  }
-  return newDatabase;
-}
-
 app.post("/urls", (request, response) => {
       let randomString = generateRandomString();
       urlDatabase[randomString] = {"longURL": request.body.longURL, "userID" : request.session.user_id}
@@ -91,9 +49,8 @@ app.post("/urls/:shortURL/delete", (request, response) => {
     delete urlDatabase[request.params.shortURL];
   response.redirect(`/urls`);
   } else {
-    response.status(403).send("no")
+    response.status(403).send("no stop")
   }
-  
 });
 app.post("/urls/:shortURL", (request, response) => {
   if(request.session.user_id === urlDatabase[request.params.shortURL].userID) {
@@ -145,25 +102,20 @@ app.post("/newLogin", (request, response) => {
 })
 
 app.get("/", (request, response) => {
-  response.send("Hello!");
+  response.send("Hello! You have reached the most basic homepage, please go to localhost:8080/urls");
 });
 
 app.get("/urls.json", (request, response) => {
   response.json(urlDatabase);
 });
 
-app.get("/hello", (request, response) => {
-  response.send("<html><body>Hello<b>World</b></body></html>\n");
-});
-
 app.get("/urls", (request, response) => {
-  
   if (request.session.user_id) { // if user exists
-    let databaseForUser = urlsForUser(request.session.user_id);
+    let databaseForUser = urlsForUser(request.session.user_id,urlDatabase);
     let templateVars = { user: users[request.session.user_id], urls: databaseForUser };
     response.render("urls_index", templateVars);
   } else {
-    console.log("redirect to login cause u ain't logged in")
+    console.log("redirect to login cause u ain't logged in, Don't cheat my server")
     response.redirect("/newLogin"); 
   }
 });
@@ -178,11 +130,10 @@ app.get("/urls/new", (request, response) => {
   if(request.session.user_id) {
     let templateVars = {user: users[request.session.user_id]};
     response.render("urls_new", templateVars);
-
   } else {
+    console.log("You are not logged in, cannot access this page")
     response.redirect("/newLogin");
   }
- 
 });
 
 app.get("/urls/:shortURL", (request, response) => {
@@ -193,12 +144,10 @@ app.get("/urls/:shortURL", (request, response) => {
     longURL: urlDatabase[request.params.shortURL].longURL
   };
   response.render("urls_show", templateVars);
-
   } else {
+    console.log("Again you are not logged in, this is not for your eyes..... go back")
     response.redirect('/newLogin')
-
   }
-  
 });
 
 app.get("/register", (request, response) => {
