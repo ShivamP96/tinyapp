@@ -26,5 +26,5 @@ describe('emailExistance', function() {
     const user = emailExistance("doesNotExist@example.com", testUsers)
     const expectedOutput = undefined;
     assert.equal(user, expectedOutput);
-  })
+  }) 
 });

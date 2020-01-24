@@ -3,7 +3,7 @@ const app = express();
 const PORT = 8080;
 const bcrypt = require('bcrypt');
 const bodyParser = require("body-parser");
-const { emailExistance, generateRandomString, urlsForUser  } = require("./helpers.js")
+const { emailExistance, generateRandomString, urlsForUser  } = require("./helpers.js");
 let cookieSession = require('cookie-session');
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -12,14 +12,16 @@ app.set("view engine", "ejs");
 app.use(cookieSession({ 
   name: 'session',
   keys: ['asdf'],
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  maxAge: 24 * 60 * 60 * 1000 
 }));
 
+// Default Database
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: 'aaa' },
   i3BoGr: { longURL: "https://www.google.ca", userID: 'user2RandomID' }
 };
 
+// Default users database
 const users = {
   userRandomID: {
     id: "userRandomID",
@@ -38,30 +40,32 @@ const users = {
   }
 };
 
+// Beginning of all post requests to the server
 app.post("/urls", (request, response) => {
-      let randomString = generateRandomString();
-      urlDatabase[randomString] = {"longURL": request.body.longURL, "userID" : request.session.user_id}
-      response.redirect(`/urls/${randomString}`)
+  let randomString = generateRandomString();
+  urlDatabase[randomString] = {"longURL": request.body.longURL, "userID" : request.session.user_id};
+  response.redirect(`/urls/${randomString}`);
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
   if(request.session.user_id === urlDatabase[request.params.shortURL].userID){
     delete urlDatabase[request.params.shortURL];
-  response.redirect(`/urls`);
+    response.redirect(`/urls`);
   } else {
-    response.status(403).send("no stop")
+    response.status(403).send("no stop");
   }
 });
+
 app.post("/urls/:shortURL", (request, response) => {
   if(request.session.user_id === urlDatabase[request.params.shortURL].userID) {
-     urlDatabase[request.params.shortURL].longURL = request.body.longURL;
-  response.redirect(`/urls`);
+    urlDatabase[request.params.shortURL].longURL = request.body.longURL;
+    response.redirect(`/urls`);
   }
 });
 
 app.post("/login", (request, response) => {
- let id =  emailExistance(request.body.user_id, users).id
-  request.session.user_id = id
+  let id =  emailExistance(request.body.user_id, users).id;
+  request.session.user_id = id;
   response.redirect(`/urls`);
 });
 
@@ -77,7 +81,6 @@ app.post("/register", (request, response) => {
   if (email.length === 0 || password.length === 0) {
     response.status(400).send("error 400");
   } else if (emailExistance(email, users)) {
-    //console.log(emailExistance(email, users));
     response.status(400).send("email already exists");
   } else {
     users[randomID] = { id: randomID, email: email, password: bcrypt.hashSync(password, 10)};
@@ -87,20 +90,18 @@ app.post("/register", (request, response) => {
 });
 
 app.post("/newLogin", (request, response) => {
-  let user =  emailExistance(request.body.email, users)
-  //console.log(user)
-  if (user === false) {
-    response.status(403).send("Email Cannot be found")
-
-  } else if (!(bcrypt.compareSync(request.body.password,user.password))) { //request.body.password !== user.password)
-
-    response.status(403).send("Passwords don't match")
+  let user =  emailExistance(request.body.email, users);
+  if (user === undefined) {
+    response.status(403).send("Email Cannot be found");
+  } else if (!(bcrypt.compareSync(request.body.password,user.password))) {
+    response.status(403).send("Passwords don't match");
   } else {
     request.session.user_id = user.id;
     response.redirect(`/urls`);
   }
 })
 
+// Begninnering of get requests
 app.get("/", (request, response) => {
   response.send("Hello! You have reached the most basic homepage, please go to localhost:8080/urls");
 });
@@ -110,20 +111,18 @@ app.get("/urls.json", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  if (request.session.user_id) { // if user exists
+  if (request.session.user_id) { 
     let databaseForUser = urlsForUser(request.session.user_id,urlDatabase);
     let templateVars = { user: users[request.session.user_id], urls: databaseForUser };
     response.render("urls_index", templateVars);
   } else {
-    console.log("redirect to login cause u ain't logged in, Don't cheat my server")
     response.redirect("/newLogin"); 
   }
 });
 
 app.get("/newLogin", (request, response) => {
-    console.log("accessing newLogin page")
-    let templateVars = { user: users[request.session.user_id], urls: urlDatabase };
-    response.render("urls_login", templateVars)
+  let templateVars = { user: users[request.session.user_id], urls: urlDatabase };
+  response.render("urls_login", templateVars)
 })
 
 app.get("/urls/new", (request, response) => {
@@ -131,7 +130,6 @@ app.get("/urls/new", (request, response) => {
     let templateVars = {user: users[request.session.user_id]};
     response.render("urls_new", templateVars);
   } else {
-    console.log("You are not logged in, cannot access this page")
     response.redirect("/newLogin");
   }
 });
@@ -139,13 +137,12 @@ app.get("/urls/new", (request, response) => {
 app.get("/urls/:shortURL", (request, response) => {
   if (request.session.user_id && urlDatabase[request.params.shortURL].userID === request.session.user_id) {
     let templateVars = {
-    user: users[request.session.user_id],
-    shortURL: request.params.shortURL,
-    longURL: urlDatabase[request.params.shortURL].longURL
-  };
-  response.render("urls_show", templateVars);
+      user: users[request.session.user_id],
+      shortURL: request.params.shortURL,
+      longURL: urlDatabase[request.params.shortURL].longURL
+    };
+    response.render("urls_show", templateVars);
   } else {
-    console.log("Again you are not logged in, this is not for your eyes..... go back")
     response.redirect('/newLogin')
   }
 });
