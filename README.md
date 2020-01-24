@@ -8,9 +8,9 @@ It is an application of different techniques we learned in class, any strech or 
 ## Final Product
 
 !["Screenshot of URLS Page"](docs/URLS-Page.png)
-!["Screenhot of Login Page"](#)
-!["Screenshot of URL Create Page"](#)
-!["Screenshot of URL-Edit Page"](#)
+!["Screenhot of Login Page"](docs/url-login.png)
+!["Screenshot of URL Create Page"](docs/url-create.png)
+!["Screenshot of URL-Edit Page"](docs/url-show.png)
 
 
 ## Dependencies
